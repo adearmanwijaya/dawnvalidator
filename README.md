@@ -17,6 +17,13 @@
 - Proxy Support
 - 2Captcha Only
 
+## Feature Runner 
+- Multi account
+- Auto ping every 5 minutes
+- Get Point
+- Multi Thread
+- Count Ping 
+- Support Proxy (1 Proxy 1 Account) 
 
 
 ## Requirements
@@ -37,6 +44,6 @@ Using cloudflare
 ---
 
 ## How to Get Started  
-Get the voucher code . Join the [Sirkel Testnet](https://t.me/sirkel_testnet) part of [Ghalibie Sharing](https://t.me/sirkel_testnet) for more information.  
+Join the [Sirkel Testnet](https://t.me/sirkel_testnet) part of [Ghalibie Sharing](https://t.me/sirkel_testnet) for more information.  
 
 ---

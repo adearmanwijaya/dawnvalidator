@@ -1,0 +1,6 @@
+urllib3
+requests
+imapclient
+Faker
+colorama
+curl_cffi
