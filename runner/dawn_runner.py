@@ -13,7 +13,7 @@ init(autoreset=True)
 # Lock for synchronized access to shared data
 data_lock = threading.Lock()
 
-# Lock for synchronized printing (if needed)
+# Lock for synchronized printing
 print_lock = threading.Lock()
 
 class Colors:
@@ -46,9 +46,9 @@ class Account:
             'discordid_points': 0,
             'telegramid_points': 0
         }
-        self.next_ping_in = 300  # 5 minutes in seconds
         self.total_points = 0  # New attribute for total points
         self.status = "Initializing"
+        self.next_ping_time = time.time()  # Initialize next ping time to current time
 
 def read_account_info(filename: str) -> List[Dict[str, str]]:
     """
@@ -183,16 +183,12 @@ def perform_getpoint(session: requests.Session, account: Account) -> Optional[Di
         if response.status_code == 200:
             try:
                 json_response = response.json()
-                 
                 return json_response
             except json.JSONDecodeError:
-                 
                 return None
         else:
-             
             return None
-    except Exception as e:
-        
+    except Exception:
         return None
 
 def update_points(account: Account, data: Dict):
@@ -218,7 +214,6 @@ def update_points(account: Account, data: Dict):
         account.points['discordid_points'] +
         account.points['telegramid_points']
     )
-
 
 def account_worker(account: Account, status_dict: Dict):
     """
@@ -269,7 +264,7 @@ def account_worker(account: Account, status_dict: Dict):
                             'ping': account.total_ping,
                             'points': account.total_points,  # Use total_points here
                             'proxy': account.proxy,
-                            'next_ping_in': 300,
+                            'next_ping_time': time.time() + 300,  # Set next ping time
                             'status': "Ping Success"
                         }
                 else:
@@ -280,7 +275,7 @@ def account_worker(account: Account, status_dict: Dict):
                             'ping': account.total_ping,
                             'points': account.total_points,
                             'proxy': account.proxy,
-                            'next_ping_in': 300,
+                            'next_ping_time': time.time() + 300,  # Even on failure, set next attempt
                             'status': f"GetPoint Failed"
                         }
                     with print_lock:
@@ -294,21 +289,17 @@ def account_worker(account: Account, status_dict: Dict):
                         'ping': account.total_ping,
                         'points': account.total_points,
                         'proxy': account.proxy,
-                        'next_ping_in': 300,
+                        'next_ping_time': time.time() + 300,  # Even on failure, set next attempt
                         'status': f"Ping Failed"
                     }
                 with print_lock:
                     print(f"{account.index}. {account.email} | Keepalive Failed: {message} | Proxy: {account.proxy}")
                 time.sleep(2)  # Wait before retrying
 
-        # Countdown for next ping (5 minutes)
-        while account.next_ping_in > 0:
-            mins, secs = divmod(account.next_ping_in, 60)
-            with data_lock:
-                status_dict[account.index]['next_ping_in'] = account.next_ping_in
-                status_dict[account.index]['status'] = "Keep Alive Success"
-            account.next_ping_in -= 1
-            time.sleep(1)
+        # Calculate sleep time until next ping
+        sleep_duration = max(0, status_dict[account.index]['next_ping_time'] - time.time())
+        if sleep_duration > 0:
+            time.sleep(sleep_duration)
 
 def display_status(status_dict: Dict):
     """
@@ -325,8 +316,11 @@ def display_status(status_dict: Dict):
                 ping = status['ping']
                 points = status['points']  # This will now reflect total_points
                 proxy = status['proxy']
-                next_ping_in = status['next_ping_in']
+                next_ping_time = status['next_ping_time']
                 status_message = status['status']
+                next_ping_in = int(next_ping_time - time.time())
+                if next_ping_in < 0:
+                    next_ping_in = 0
                 mins, secs = divmod(next_ping_in, 60)
                 # Apply colors to each field
                 colored_ping = f"{Colors.PING}Ping: {ping}{Colors.RESET}"
@@ -336,8 +330,7 @@ def display_status(status_dict: Dict):
                 colored_next_ping = f"{Colors.NEXT_PING}Next Ping in: {mins}m {secs}s{Colors.RESET}"
                 print(f"{index}. {email} | {colored_ping} | {colored_points} | {colored_status} | {colored_proxy} | {colored_next_ping}")
         print("-" * 100)
-        time.sleep(1)
-
+        time.sleep(5)  # Update every 5 seconds
 
 def main():
     """
@@ -378,7 +371,7 @@ def main():
             'ping': account.total_ping,
             'points': account.points['points'],
             'proxy': account.proxy,
-            'next_ping_in': account.next_ping_in,
+            'next_ping_time': account.next_ping_time,
             'status': "Initializing"
         }
 
