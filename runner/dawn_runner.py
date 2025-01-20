@@ -264,7 +264,7 @@ def account_worker(account: Account, status_dict: Dict):
                             'ping': account.total_ping,
                             'points': account.total_points,  # Use total_points here
                             'proxy': account.proxy,
-                            'next_ping_time': time.time() + 300,  # Set next ping time
+                            'next_ping_time': time.time() + 120,  # **Changed from 300 to 120 seconds**
                             'status': "Ping Success"
                         }
                 else:
@@ -275,7 +275,7 @@ def account_worker(account: Account, status_dict: Dict):
                             'ping': account.total_ping,
                             'points': account.total_points,
                             'proxy': account.proxy,
-                            'next_ping_time': time.time() + 300,  # Even on failure, set next attempt
+                            'next_ping_time': time.time() + 120,  # **Changed from 300 to 120 seconds**
                             'status': f"GetPoint Failed"
                         }
                     with print_lock:
@@ -289,7 +289,7 @@ def account_worker(account: Account, status_dict: Dict):
                         'ping': account.total_ping,
                         'points': account.total_points,
                         'proxy': account.proxy,
-                        'next_ping_time': time.time() + 300,  # Even on failure, set next attempt
+                        'next_ping_time': time.time() + 120,  # **Changed from 300 to 120 seconds**
                         'status': f"Ping Failed"
                     }
                 with print_lock:
